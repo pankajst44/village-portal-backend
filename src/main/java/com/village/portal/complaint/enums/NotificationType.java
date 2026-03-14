@@ -1,0 +1,13 @@
+package com.village.portal.complaint.enums;
+
+public enum NotificationType {
+    COMPLAINT_SUBMITTED,
+    COMPLAINT_VERIFIED,
+    COMPLAINT_REJECTED,
+    COMPLAINT_ASSIGNED,
+    OFFICER_UPDATE,
+    RESOLUTION_READY,
+    RESOLUTION_ACCEPTED,
+    RESOLUTION_REJECTED,
+    ESCALATION_ALERT
+}

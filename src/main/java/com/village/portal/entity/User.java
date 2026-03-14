@@ -29,7 +29,7 @@ public class User {
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, columnDefinition = "ENUM('ADMIN','OFFICER','AUDITOR')"
+    @Column(name = "role", nullable = false, columnDefinition = "ENUM('ADMIN','OFFICER','AUDITOR','RESIDENT')"
     )
     private Role role;
 

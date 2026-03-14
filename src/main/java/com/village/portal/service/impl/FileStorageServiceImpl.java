@@ -26,8 +26,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     private static final String[] ALLOWED_CONTENT_TYPES = {
             "image/jpeg", "image/jpg", "image/png", "application/pdf"
     };
-
-    private static final long MAX_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
+    private static final long MAX_SIZE_BYTES = 10 * 1024 * 1024L;
 
     @Value("${app.storage.upload-dir:./uploads}")
     private String uploadDir;
@@ -41,68 +40,73 @@ public class FileStorageServiceImpl implements FileStorageService {
             Files.createDirectories(this.uploadPath);
             log.info("File storage initialised at: {}", this.uploadPath);
         } catch (IOException ex) {
-            throw new FileStorageException(
-                    "Could not create upload directory at: " + uploadDir, ex);
+            throw new FileStorageException("Could not create upload directory at: " + uploadDir, ex);
         }
     }
 
+    // ── Original flat store (backwards compatible) ────────────
     @Override
     public String storeFile(MultipartFile file) {
+        return storeFile(file, null);
+    }
 
-        // ── Validate: not empty ──
-        if (file == null || file.isEmpty()) {
-            throw new FileStorageException("Cannot store an empty file");
-        }
+    // ── Store with subfolder (used by CMS evidence) ───────────
+    @Override
+    public String storeFile(MultipartFile file, String subFolder) {
+        validate(file);
 
-        // ── Validate: file size ──
-        if (file.getSize() > MAX_SIZE_BYTES) {
-            throw new FileStorageException(
-                    "File size exceeds maximum allowed limit of 10 MB");
-        }
-
-        // ── Validate: MIME type ──
-        String contentType = file.getContentType();
-        if (contentType == null ||
-                Arrays.stream(ALLOWED_CONTENT_TYPES).noneMatch(t -> t.equalsIgnoreCase(contentType))) {
-            throw new FileStorageException(
-                    "File type '" + contentType + "' is not allowed. " +
-                    "Accepted types: JPEG, PNG, PDF");
-        }
-
-        // ── Sanitise original filename ──
         String originalName = StringUtils.cleanPath(
                 file.getOriginalFilename() != null ? file.getOriginalFilename() : "upload");
 
         if (originalName.contains("..")) {
-            throw new FileStorageException(
-                    "Filename contains invalid path sequence: " + originalName);
+            throw new FileStorageException("Filename contains invalid path sequence: " + originalName);
         }
 
-        // ── Generate a UUID-based stored filename ──
         String extension  = getExtension(originalName);
-        String storedName = UUID.randomUUID().toString() + extension;
+        String storedName = UUID.randomUUID() + extension;
 
         try {
-            Path targetPath = this.uploadPath.resolve(storedName);
+            Path targetDir;
+            if (subFolder != null && !subFolder.isBlank()) {
+                // Sanitise subFolder — strip leading slash, prevent path traversal
+                String cleanSub = subFolder.replace("..", "").replaceAll("^/+", "");
+                targetDir = this.uploadPath.resolve(cleanSub).normalize();
+                // Safety: ensure resolved dir is still inside uploadPath
+                if (!targetDir.startsWith(this.uploadPath)) {
+                    throw new FileStorageException("Invalid subfolder path: " + subFolder);
+                }
+                Files.createDirectories(targetDir);
+            } else {
+                targetDir = this.uploadPath;
+            }
+
+            Path targetPath = targetDir.resolve(storedName);
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-            log.info("Stored file '{}' as '{}'", originalName, storedName);
-            return storedName;
+
+            // Return relative path from upload root
+            String relativePath = subFolder != null && !subFolder.isBlank()
+                    ? subFolder.replaceAll("^/+", "") + "/" + storedName
+                    : storedName;
+
+            log.info("Stored file '{}' at '{}'", originalName, relativePath);
+            return relativePath;
 
         } catch (IOException ex) {
-            throw new FileStorageException(
-                    "Failed to store file '" + originalName + "'", ex);
+            throw new FileStorageException("Failed to store file '" + originalName + "'", ex);
         }
     }
 
     @Override
     public void deleteFile(String storedFileName) {
-        if (storedFileName == null || storedFileName.isBlank()) {
-            return;
-        }
+        if (storedFileName == null || storedFileName.isBlank()) return;
         try {
             Path filePath = this.uploadPath.resolve(storedFileName).normalize();
+            if (!filePath.startsWith(this.uploadPath)) {
+                log.warn("Attempted path traversal on delete: {}", storedFileName);
+                return;
+            }
             Files.deleteIfExists(filePath);
-            log.info("Deleted stored file: {}", storedFileName);
+            log.info("Deleted file: {}", storedFileName);
         } catch (IOException ex) {
             log.warn("Could not delete file '{}': {}", storedFileName, ex.getMessage());
         }
@@ -113,10 +117,24 @@ public class FileStorageServiceImpl implements FileStorageService {
         return this.uploadPath.resolve(storedFileName).normalize().toString();
     }
 
-    // ── Helpers ──
+    // ── Helpers ───────────────────────────────────────────────
+
+    private void validate(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new FileStorageException("Cannot store an empty file");
+        }
+        if (file.getSize() > MAX_SIZE_BYTES) {
+            throw new FileStorageException("File exceeds maximum allowed size of 10 MB");
+        }
+        String ct = file.getContentType();
+        if (ct == null || Arrays.stream(ALLOWED_CONTENT_TYPES).noneMatch(t -> t.equalsIgnoreCase(ct))) {
+            throw new FileStorageException(
+                    "File type '" + ct + "' is not allowed. Accepted: JPEG, PNG, PDF");
+        }
+    }
 
     private String getExtension(String filename) {
-        int dotIndex = filename.lastIndexOf('.');
-        return (dotIndex >= 0) ? filename.substring(dotIndex).toLowerCase() : "";
+        int dot = filename.lastIndexOf('.');
+        return dot >= 0 ? filename.substring(dot).toLowerCase() : "";
     }
 }

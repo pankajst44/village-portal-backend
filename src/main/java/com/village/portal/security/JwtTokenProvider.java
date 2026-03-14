@@ -58,9 +58,12 @@ public class JwtTokenProvider {
             parseClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
-            // Token expired — handled by filter
+            // Re-throw so JwtAuthenticationFilter can catch it specifically
+            // and return HTTP 401 (instead of letting the request fall through
+            // as anonymous and getting a 403 from Spring Security).
+            throw e;
         } catch (JwtException | IllegalArgumentException e) {
-            // Invalid token
+            // Bad signature, malformed token, etc. — treat as unauthenticated
         }
         return false;
     }

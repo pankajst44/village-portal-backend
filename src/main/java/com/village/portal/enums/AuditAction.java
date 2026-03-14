@@ -1,6 +1,7 @@
 package com.village.portal.enums;
 
 public enum AuditAction {
+    // Existing
     CREATE,
     UPDATE,
     DELETE,
@@ -10,5 +11,14 @@ public enum AuditAction {
     FILE_UPLOAD,
     FILE_DELETE,
     VERIFY,
-    EXPORT
+    EXPORT,
+    // CMS additions
+    ASSIGN,
+    RESOLVE,
+    REJECT,
+    ESCALATE,
+    VOTE,
+    OTP_SENT,
+    OTP_VERIFIED,
+    REGISTER
 }

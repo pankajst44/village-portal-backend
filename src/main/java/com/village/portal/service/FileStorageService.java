@@ -4,20 +4,19 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface FileStorageService {
 
-    /**
-     * Saves the file to the configured upload directory.
-     * Returns the stored file name (UUID-based, not the original name).
-     */
+    /** Saves file to root upload dir. Returns stored UUID filename. */
     String storeFile(MultipartFile file);
 
     /**
-     * Deletes a stored file by its stored file name.
-     * Silently ignores missing files.
+     * Saves file under a subdirectory within the upload dir.
+     * e.g. subFolder = "complaints/1/2024/03/submission"
+     * Returns relative path from upload root: "complaints/1/2024/03/submission/uuid.jpg"
      */
+    String storeFile(MultipartFile file, String subFolder);
+
+    /** Deletes a file by its relative path from upload root. */
     void deleteFile(String storedFileName);
 
-    /**
-     * Returns the absolute path string for a stored file name.
-     */
+    /** Returns absolute path string for a relative stored path. */
     String getFilePath(String storedFileName);
 }
