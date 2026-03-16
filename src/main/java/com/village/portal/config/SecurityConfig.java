@@ -75,60 +75,84 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // ── CORS preflight ──
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                // ── SPA static files (Angular build in /static) ──
+                .antMatchers(
+                        "/",
+                        "/index.html",
+                        "/favicon.ico",
+                        "/assets/**",
+                        "/**/*.js",
+                        "/**/*.css",
+                        "/**/*.map",
+                        "/**/*.png",
+                        "/**/*.jpg",
+                        "/**/*.jpeg",
+                        "/**/*.gif",
+                        "/**/*.svg",
+                        "/**/*.webp",
+                        "/**/*.woff",
+                        "/**/*.woff2",
+                        "/**/*.ttf"
+                ).permitAll()
+
                 // ── Auth ──
-                .antMatchers("/auth/login", "/auth/refresh","/auth/register/resident").permitAll()
+                .antMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/register/resident").permitAll()
 
                 // ── Public portal — no auth required ──
-                .antMatchers(HttpMethod.GET, "/public/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/projects/public/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/funds/public/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/contractors/public/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/documents/public/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/public/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/projects/public/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/funds/public/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/contractors/public/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/documents/public/**").permitAll()
                 // Document download: isPublic docs served to everyone
-                .antMatchers(HttpMethod.GET, "/documents/*/download").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/documents/*/download").permitAll()
 
                 // ── Complaint routes (added for CMS — Phase 2) ──
-                .antMatchers(HttpMethod.GET,    "/complaints/public/**").permitAll()
-                .antMatchers(HttpMethod.GET,    "/complaint-categories/public").permitAll()
-                .antMatchers(HttpMethod.POST,   "/complaints").hasAnyRole("RESIDENT", "ADMIN")
-                .antMatchers(HttpMethod.POST,   "/complaints/*/evidence").hasAnyRole("RESIDENT", "OFFICER", "ADMIN")
-                .antMatchers(HttpMethod.POST,   "/complaints/*/vote").hasRole("RESIDENT")
-                .antMatchers(HttpMethod.POST,   "/complaints/*/resolution/accept").hasAnyRole("RESIDENT", "ADMIN")
-                .antMatchers(HttpMethod.POST,   "/complaints/*/resolution/reject").hasAnyRole("RESIDENT", "ADMIN")
-                .antMatchers(HttpMethod.GET,    "/complaints/my").hasAnyRole("RESIDENT", "ADMIN")
-                .antMatchers(HttpMethod.POST,   "/complaints/*/update").hasAnyRole("OFFICER", "ADMIN")
-                .antMatchers(HttpMethod.POST,   "/complaints/*/resolve").hasAnyRole("OFFICER", "ADMIN")
-                .antMatchers("/complaints/admin/**").hasAnyRole("ADMIN", "AUDITOR")
-                .antMatchers(HttpMethod.POST,   "/complaints/*/verify").hasRole("ADMIN")
-                .antMatchers(HttpMethod.POST,   "/complaints/*/reject").hasRole("ADMIN")
-                .antMatchers(HttpMethod.POST,   "/complaints/*/assign").hasRole("ADMIN")
-                .antMatchers(HttpMethod.POST,   "/auth/otp/**").hasAnyRole("RESIDENT", "ADMIN")
+                .antMatchers(HttpMethod.GET,    "/api/complaints/public/**").permitAll()
+                .antMatchers(HttpMethod.GET,    "/api/complaint-categories/public").permitAll()
+                .antMatchers(HttpMethod.POST,   "/api/complaints").hasAnyRole("RESIDENT", "ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/complaints/*/evidence").hasAnyRole("RESIDENT", "OFFICER", "ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/complaints/*/vote").hasRole("RESIDENT")
+                .antMatchers(HttpMethod.POST,   "/api/complaints/*/resolution/accept").hasAnyRole("RESIDENT", "ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/complaints/*/resolution/reject").hasAnyRole("RESIDENT", "ADMIN")
+                .antMatchers(HttpMethod.GET,    "/api/complaints/my").hasAnyRole("RESIDENT", "ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/complaints/*/update").hasAnyRole("OFFICER", "ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/complaints/*/resolve").hasAnyRole("OFFICER", "ADMIN")
+                .antMatchers("/api/complaints/admin/**").hasAnyRole("ADMIN", "AUDITOR")
+                .antMatchers(HttpMethod.POST,   "/api/complaints/*/verify").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/complaints/*/reject").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/complaints/*/assign").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/auth/otp/**").hasAnyRole("RESIDENT", "ADMIN")
 
                 // ── Admin-only ──
-                .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/users/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.POST,   "/funds/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.PUT,    "/funds/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.DELETE, "/funds/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.POST,   "/contractors", "/contractors/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.PUT,    "/contractors", "/contractors/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.PATCH,  "/contractors", "/contractors/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.DELETE, "/contractors", "/contractors/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.DELETE, "/projects/**").hasRole("ADMIN")
+                .antMatchers("/api/admin/**").hasRole("ADMIN")
+                .antMatchers("/api/users/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/funds/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.PUT,    "/api/funds/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.DELETE, "/api/funds/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,   "/api/contractors", "/api/contractors/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.PUT,    "/api/contractors", "/api/contractors/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.PATCH,  "/api/contractors", "/api/contractors/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.DELETE, "/api/contractors", "/api/contractors/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.DELETE, "/api/projects/**").hasRole("ADMIN")
 
                 // ── Officer ──
-                .antMatchers(HttpMethod.POST, "/projects/**").hasAnyRole("ADMIN", "OFFICER")
-                .antMatchers(HttpMethod.PUT,  "/projects/**").hasAnyRole("ADMIN", "OFFICER")
-                .antMatchers(HttpMethod.POST, "/expenditures", "/expenditures/**").hasAnyRole("ADMIN", "OFFICER")
-                .antMatchers(HttpMethod.POST, "/documents", "/documents/**").hasAnyRole("ADMIN", "OFFICER")
+                .antMatchers(HttpMethod.POST, "/api/projects/**").hasAnyRole("ADMIN", "OFFICER")
+                .antMatchers(HttpMethod.PUT,  "/api/projects/**").hasAnyRole("ADMIN", "OFFICER")
+                .antMatchers(HttpMethod.POST, "/api/expenditures", "/api/expenditures/**").hasAnyRole("ADMIN", "OFFICER")
+                .antMatchers(HttpMethod.POST, "/api/documents", "/api/documents/**").hasAnyRole("ADMIN", "OFFICER")
 
                 // ── Auditor + Admin ──
-                .antMatchers("/audit-logs/**").hasAnyRole("ADMIN", "AUDITOR")
-                .antMatchers("/reports/**").hasAnyRole("ADMIN", "AUDITOR")
-                .antMatchers(HttpMethod.GET, "/expenditures", "/expenditures/**").hasAnyRole("ADMIN", "OFFICER", "AUDITOR")
-                .antMatchers(HttpMethod.PUT, "/expenditures/**").hasAnyRole("ADMIN", "AUDITOR")
+                .antMatchers("/api/audit-logs/**").hasAnyRole("ADMIN", "AUDITOR")
+                .antMatchers("/api/reports/**").hasAnyRole("ADMIN", "AUDITOR")
+                .antMatchers(HttpMethod.GET, "/api/expenditures", "/api/expenditures/**").hasAnyRole("ADMIN", "OFFICER", "AUDITOR")
+                .antMatchers(HttpMethod.PUT, "/api/expenditures/**").hasAnyRole("ADMIN", "AUDITOR")
 
-                .anyRequest().authenticated()
+                // Anything else under /api requires authentication by default.
+                .antMatchers("/api/**").authenticated()
+
+                // Any non-API route is the SPA (e.g. /dashboard) and must be public.
+                .anyRequest().permitAll()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter(),
                         UsernamePasswordAuthenticationFilter.class);
