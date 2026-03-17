@@ -31,7 +31,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    @Value("${app.cors.allowed-origins}")
+    @Value("${app.cors.allowed-origins:}")
     private String allowedOrigins;
 
     public SecurityConfig(UserDetailsServiceImpl userDetailsService,
@@ -161,8 +161,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        java.util.List<String> origins = java.util.Arrays.asList(allowedOrigins.split(","));
-        config.setAllowedOrigins(origins);
+
+        // If allowedOrigins is empty/blank, allow all origins (safe for same-origin deployment)
+        if (allowedOrigins == null || allowedOrigins.trim().isEmpty()) {
+            config.setAllowedOriginPatterns(java.util.Arrays.asList("*"));
+        } else {
+            config.setAllowedOrigins(java.util.Arrays.asList(allowedOrigins.split(",")));
+        }
+
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Refresh-Token"));
         config.setAllowCredentials(true);
