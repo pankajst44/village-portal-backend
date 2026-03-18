@@ -43,8 +43,9 @@ public class SpaForwardFilter extends OncePerRequestFilter {
         if (path == null || path.isBlank()) return false;
         if ("/".equals(path) || "/index.html".equals(path)) return false;
 
-        // Never forward API calls
+        // Never forward API calls or actuator endpoints
         if (path.equals("/api") || path.startsWith("/api/")) return false;
+        if (path.equals("/actuator") || path.startsWith("/actuator/")) return false;
 
         // Don't forward static assets (anything with a dot in the last segment)
         int lastSlash = path.lastIndexOf('/');

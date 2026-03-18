@@ -75,6 +75,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // ── CORS preflight ──
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                // ── Health endpoint for Railway/load balancers (must be before static files) ──
+                .antMatchers("/actuator/**").permitAll()
+
                 // ── SPA static files (Angular build in /static) ──
                 .antMatchers(
                         "/",
